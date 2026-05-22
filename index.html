@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Althaaf Ramadhan — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script src="https://unpkg.com/page-flip/dist/js/page-flip.browser.js"></script>
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --cream: #F0EBE1;
+      --cream-dim: rgba(240, 235, 225, 0.55);
+      --dark-red: #8B1A1A;
+      --dark-red-glow: rgba(139, 26, 26, 0.18);
+      --teal: #4A7C6F;
+      --dark: #181310;
+      --dark-surface: #1f1a15;
+    }
+
+    body {
+      background: var(--dark);
+      font-family: 'DM Sans', sans-serif;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* ── LOADING ── */
+    #loading-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      z-index: 100;
+      transition: opacity 0.8s ease;
+    }
+
+    #loading-screen.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-label {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 10px;
+      font-weight: 400;
+      letter-spacing: 0.45em;
+      text-transform: uppercase;
+      color: #F0EBE1;
+    }
+
+    .loading-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 48px;
+      font-weight: 300;
+      font-style: italic;
+      color: var(--cream);
+      letter-spacing: 0.02em;
+      line-height: 1;
+    }
+
+    .loading-name strong {
+      font-style: normal;
+      font-weight: 400;
+      color: #F0EBE1;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 38px;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .loading-divider {
+      width: 1px;
+      height: 40px;
+      background: linear-gradient(to bottom, transparent, #F0EBE1, transparent);
+    }
+
+    .progress-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .progress-bar {
+      width: 160px;
+      height: 1px;
+      background: rgba(240, 235, 225, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #F0EBE1;
+      width: 0%;
+      transition: width 0.4s ease;
+    }
+
+    .progress-text {
+      font-size: 9px;
+      letter-spacing: 0.25em;
+      color: #F0EBE1;
+      text-transform: uppercase;
+      font-weight: 300;
+    }
+
+    /* ── FLIPBOOK ── */
+    #flipbook-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 20px;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    #flipbook-area.visible {
+      opacity: 1;
+    }
+
+    .page {
+      background: var(--cream);
+      overflow: hidden;
+    }
+
+    .page img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* ── CONTROLS ── */
+    .controls-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .btn-nav {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #F0EBE1;
+      background: transparent;
+      color: #F0EBE1;
+      font-size: 13px;
+      cursor: pointer;
+      border-radius: 2px;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .btn-nav:hover:not(:disabled) {
+      border-color: #F0EBE1;
+      color: var(--cream);
+      background: var(--dark-red-glow);
+    }
+
+    .btn-nav:active:not(:disabled) {
+      transform: scale(0.94);
+    }
+
+    .btn-nav:disabled {
+      opacity: 0.15;
+      cursor: not-allowed;
+    }
+
+    .page-counter {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 90px;
+      justify-content: center;
+    }
+
+    .page-num {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--cream);
+      font-variant-numeric: tabular-nums;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    .page-sep {
+      width: 20px;
+      height: 1px;
+      background: #969696;
+    }
+
+    .page-total {
+      font-size: 13px;
+      font-weight: 300;
+      color: #969696;
+      font-variant-numeric: tabular-nums;
+      min-width: 16px;
+      text-align: center;
+    }
+
+    .hint-row {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .hint {
+      font-size: 9px;
+      color: #F0EBE1;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      font-weight: 300;
+    }
+
+    .hint-dot {
+      width: 2px;
+      height: 2px;
+      border-radius: 50%;
+      background: #F0EBE1;
+    }
+
+    /* ── CORNER BRAND ── */
+    .corner-brand {
+      position: fixed;
+      bottom: 18px;
+      right: 22px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 10px;
+      font-style: italic;
+      font-weight: 300;
+      letter-spacing: 0.15em;
+      color: #F0EBE1;
+    }
+
+    /* subtle top bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(to right, #F0EBE1, transparent);
+      pointer-events: none;
+    }
+
+  </style>
+</head>
+
+<body>
+
+  <div class="top-bar"></div>
+
+  <div id="loading-screen">
+    <p class="loading-label">Portfolio · 2026</p>
+    <h1 class="loading-name"><strong> Althaaf Ramadhan</strong></h1>
+    <div class="loading-divider"></div>
+    <div class="progress-wrap">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <p class="progress-text" id="progress-text">Loading</p>
+    </div>
+  </div>
+
+  <div id="flipbook-area">
+    <div id="flipbook-container"></div>
+    <div class="controls-wrap">
+      <div class="controls">
+        <button class="btn-nav" id="btn-prev" disabled aria-label="Previous page">←</button>
+        <div class="page-counter">
+          <span class="page-num" id="page-current">1</span>
+          <div class="page-sep"></div>
+          <span class="page-total" id="page-total">—</span>
+        </div>
+        <button class="btn-nav" id="btn-next" aria-label="Next page">→</button>
+      </div>
+      <div class="hint-row">
+        <span class="hint">arrow keys</span>
+        <div class="hint-dot"></div>
+        <span class="hint">click edge to flip</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="corner-brand">Althaaf Ramadhan © 2026</div>
+
+  <script>
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+    const PDF_URL = './portfolio.pdf';
+    let pageFlip = null;
+    let currentPage = 1;
+
+    function getDimensions() {
+      const maxW = window.innerWidth * 0.88;
+      const maxH = window.innerHeight * 0.78;
+      const ratio = 297 / 210;
+      let w = maxW / 2;
+      let h = w / ratio;
+      if (h > maxH) { h = maxH; w = h * ratio; }
+      return { pageW: Math.floor(w), pageH: Math.floor(h) };
+    }
+
+    async function loadAndRender() {
+      const { pageW, pageH } = getDimensions();
+      try {
+        const loadingTask = pdfjsLib.getDocument(PDF_URL);
+        loadingTask.onProgress = (data) => {
+          if (data.total) {
+            const pct = Math.round((data.loaded / data.total) * 70);
+            document.getElementById('progress-fill').style.width = pct + '%';
+            document.getElementById('progress-text').textContent = pct + '%';
+          }
+        };
+
+        const pdf = await loadingTask.promise;
+        const totalPages = pdf.numPages;
+        const pages = [];
+
+        for (let i = 1; i <= totalPages; i++) {
+          const page = await pdf.getPage(i);
+          const viewport = page.getViewport({ scale: 1 });
+          const scale = Math.min(pageW / viewport.width, pageH / viewport.height) * 2;
+          const scaledVP = page.getViewport({ scale });
+
+          const canvas = document.createElement('canvas');
+          canvas.width = scaledVP.width;
+          canvas.height = scaledVP.height;
+          await page.render({ canvasContext: canvas.getContext('2d'), viewport: scaledVP }).promise;
+          pages.push(canvas.toDataURL('image/jpeg', 0.92));
+
+          const pct = 70 + Math.round((i / totalPages) * 28);
+          document.getElementById('progress-fill').style.width = pct + '%';
+          document.getElementById('progress-text').textContent = `${i} / ${totalPages}`;
+        }
+
+        document.getElementById('progress-fill').style.width = '100%';
+
+        const container = document.getElementById('flipbook-container');
+        container.style.width = (pageW * 2) + 'px';
+        container.style.height = pageH + 'px';
+
+        pages.forEach((dataUrl) => {
+          const div = document.createElement('div');
+          div.className = 'page';
+          div.style.width = pageW + 'px';
+          div.style.height = pageH + 'px';
+          const img = document.createElement('img');
+          img.src = dataUrl;
+          div.appendChild(img);
+          container.appendChild(div);
+        });
+
+        pageFlip = new St.PageFlip(container, {
+          width: pageW,
+          height: pageH,
+          size: 'fixed',
+          showCover: true,
+          mobileScrollSupport: false,
+          flippingTime: 700,
+          usePortrait: false,
+          autoSize: false,
+          maxShadowOpacity: 0.6,
+          showPageCorners: true,
+          disableFlipByClick: false
+        });
+
+        pageFlip.loadFromHTML(container.querySelectorAll('.page'));
+
+        pageFlip.on('flip', (e) => {
+          currentPage = e.data + 1;
+          updateUI();
+        });
+
+        document.getElementById('page-total').textContent = totalPages;
+        updateUI();
+
+        setTimeout(() => {
+          document.getElementById('loading-screen').classList.add('fade-out');
+          document.getElementById('flipbook-area').classList.add('visible');
+          setTimeout(() => document.getElementById('loading-screen').style.display = 'none', 800);
+        }, 400);
+
+      } catch (err) {
+        console.error(err);
+        document.getElementById('progress-text').textContent = 'Failed to load.';
+      }
+    }
+
+    function updateUI() {
+      const total = pageFlip ? pageFlip.getPageCount() : 0;
+      document.getElementById('page-current').textContent = currentPage;
+      document.getElementById('page-total').textContent = total;
+      document.getElementById('btn-prev').disabled = currentPage <= 1;
+      document.getElementById('btn-next').disabled = currentPage >= total;
+    }
+
+    document.getElementById('btn-prev').addEventListener('click', () => pageFlip?.flipPrev());
+    document.getElementById('btn-next').addEventListener('click', () => pageFlip?.flipNext());
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight') pageFlip?.flipNext();
+      if (e.key === 'ArrowLeft') pageFlip?.flipPrev();
+    });
+
+    loadAndRender();
+  </script>
+</body>
+
+</html>
